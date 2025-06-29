@@ -111,7 +111,3 @@ If the bypass is successful, the output will look like this:
 content="width=device-width"/><title>Admin Panel</title>...
 ------------------------
 ```
-
-## License
-
-Distributed under the MIT License. See `LICENSE.md` for more information.
