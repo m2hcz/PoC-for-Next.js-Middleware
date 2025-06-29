@@ -99,13 +99,3 @@ python poc.py internal-app:8080 --proxy http://127.0.0.1:8080 -v
 ```
 
 ---
-
-## 🤝 Contributing
-
-1. Fork this repository
-2. Create a branch: `git checkout -b feature/my-feature`
-3. Commit changes
-4. Run tests & lint: `pytest && ruff .`
-5. Open a Pull Request
-
----
