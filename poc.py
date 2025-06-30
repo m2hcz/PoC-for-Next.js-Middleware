@@ -28,7 +28,7 @@ def print_banner():
 \_| \_/\___/\_| \_| \_/  \_| |_/\___/\____/   \____/\___/\____/\_| \_|
                                                          
 {Color.YELLOW}PoC Template for Web Vulnerability Analysis
-{Color.RED}Disclaimer: CVE-2025-29927 is fictional and used for demonstration purposes.{Color.RESET}
+{Color.RED}Disclaimer: This CVE-2025-29927 PoC is for education purposes only..{Color.RESET}
 """
     print(banner)
 
