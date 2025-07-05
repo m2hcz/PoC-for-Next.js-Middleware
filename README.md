@@ -1,7 +1,6 @@
 # PoC for Next.js Middleware Bypass (CVE-2025-29927)
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 
 This is a **proof-of-concept** for a **fictional** Next.js middleware bypass vulnerability (CVE-2025-29927). Use **only** for educational and authorized security research.
